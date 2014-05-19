@@ -3,7 +3,6 @@ from containerscafe.containers.config \
     import ContainersSetupConfig, ContainerTestParameters
 from containerscafe.containers.container_factory import BuildContainerClient
 
-
 class ContainerHostFixture(BaseTestFixture):
     """
     Used for connecting to the system that will be HOSTING the container.
@@ -47,10 +46,63 @@ class ContainerHostFixture(BaseTestFixture):
         self.fixture_log.info("DEBUG enabled: {debug}".format(
             debug=self.DEBUG))
 
+        print self.client.execute('ls')
+
     @classmethod
     def tearDownClass(cls):
         super(ContainerHostFixture, cls).tearDownClass()
         cls.client.clean()
+
+
+class ContainerFixture(ContainerHostFixture):
+    """
+    Used for connecting to the container.
+    """
+
+    REFERENCE_POINT = BuildContainerClient.HOST
+
+    @classmethod
+    def setUpClass(cls):
+        super(ContainerFixture, cls).setUpClass()
+
+        container_type = cls.container_config.container_type
+        container_name = cls.container_config.default_container_name
+
+        # TODO (nelsnelson) Automate container setup through client to host.
+        print cls.client.execute('ls')
+
+        cls.client.clean()
+
+        container_init = BuildContainerClient(
+            container_type=container_type,
+            test_ref_point=BuildContainerClient.CONTAINER,
+            container_config=cls.container_config,
+            test_config=cls.container_test_config,
+            username=cls.container_config.container_username,
+            password=cls.container_config.container_password,
+            container_name=container_name)
+
+        cls.client = container_init.get_client()
+        if cls.client is None:
+            cls.assertClassSetupFailure(
+                'Unable to create connection to target:\n'
+                'Container Type: {type_}\n'
+                'Reference Point: {ref_pt}\n'
+                'Container Name: {name}'.format(type_=container_type,
+                                                ref_pt=cls.REFERENCE_POINT,
+                                                name=container_name))
+
+    def setUp(self):
+        super(ContainerFixture, self).setUp()
+        self.fixture_log.info("DEBUG enabled: {debug}".format(
+            debug=self.DEBUG))
+        self.fixture_log.info("TEST REFERENCE POINT: {reference}".format(
+            reference=self.REFERENCE_POINT))
+
+    @classmethod
+    def tearDownClass(cls):
+        super(ContainerFixture, cls).tearDownClass()
+        #cls.client.clean()
 
 
 class NonContainerFixture(BaseTestFixture):
@@ -102,7 +154,6 @@ class NonContainerFixture(BaseTestFixture):
     @classmethod
     def tearDownClass(cls):
         super(NonContainerFixture, cls).tearDownClass()
-        # print "CLIENT:", cls.client
         cls.client.clean()
 
     def get_cmd_single_line_output(self, cmd, client=None, prompts=None):
