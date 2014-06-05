@@ -7,7 +7,7 @@ from containersroast.fixtures import ContainerFixture
 class TestContainerConnection(ContainerFixture):
 
     def test_container_connection(self):
-        """Testing container connection."""
+        """ Testing container connection """
 
         log = self.fixture_log
 

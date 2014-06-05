@@ -46,7 +46,7 @@ class ContainerHostFixture(BaseTestFixture):
         self.fixture_log.info("DEBUG enabled: {debug}".format(
             debug=self.DEBUG))
 
-        print self.client.execute('ls')
+        #print self.client.execute('ls')
 
     @classmethod
     def tearDownClass(cls):
@@ -69,7 +69,7 @@ class ContainerFixture(ContainerHostFixture):
         container_name = cls.container_config.default_container_name
 
         # TODO (nelsnelson) Automate container setup through client to host.
-        print cls.client.execute('ls')
+        cls.client.execute('ls')
 
         cls.client.clean()
 
@@ -103,6 +103,46 @@ class ContainerFixture(ContainerHostFixture):
     def tearDownClass(cls):
         super(ContainerFixture, cls).tearDownClass()
         #cls.client.clean()
+
+    def execute(self, cmd, client=None, prompts=None):
+        log = self.fixture_log
+        prompts = prompts or ('#', '\$')
+        client = client or self.client
+
+        response = client.execute(cmd)
+
+        log.info('STD_OUT:\n{stdout}'.format(stdout=response.stdout))
+        log.info('STD_ERR:\n{stderr}'.format(stderr=response.stdout))
+
+        output = str(response.stdout).split('\n')
+
+        print "OUTPUT [\n{}\n]".format(output)
+
+        output = output[1].strip()
+        for prompt in prompts:
+            if prompt in str(output):
+                output = self.ERROR_CODE
+        response.stdout = output
+        response.stdin = cmd
+        return response
+
+    def get_cmd_single_line_output(self, cmd, client=None, prompts=None):
+        log = self.fixture_log
+        prompts = prompts or ('#', '\$')
+        client = client or self.client
+
+        response = client.execute(cmd)
+
+        log.info('STD_OUT:\n{stdout}'.format(stdout=response.stdout))
+        log.info('STD_ERR:\n{stderr}'.format(stderr=response.stdout))
+
+        output = str(response.stdout).split('\n')[1].strip()
+        for prompt in prompts:
+            if prompt in str(output):
+                output = self.ERROR_CODE
+        response.stdout = output
+        response.stdin = cmd
+        return response
 
 
 class NonContainerFixture(BaseTestFixture):

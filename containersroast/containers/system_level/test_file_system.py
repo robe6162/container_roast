@@ -16,10 +16,6 @@ class TestFileSystem(NonContainerFixture):
         temp_dir = self.container_test_config.temp_mkdir_dir
         log = self.fixture_log
 
-        log.debug(" ****")
-        log.debug(" test_file_system_directory_depth; container_config #=> {}".format(container_config))
-        log.debug(" ****")
-
         # Create the directories on the target system
         self._create_dirs(test_dir=temp_dir, max_nodes=max_nodes)
         self._goto_dir('{directory}..'.format(directory=temp_dir))
